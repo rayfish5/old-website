@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+	
+	<head>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-126026877-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-126026877-1');
+      </script>
+
+	  <title>Rayfish.us</title>
+
+	  <style>
+  	  /* canvas border */
+      canvas {border: 1px solid black;
+      width: 80%;}
+      /* css buttons */
+
+      .button {
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 16px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        -webkit-transition-duration: 0.4s;
+        transition-duration: 0.4s;
+        cursor: pointer;
+      }
+
+      .button1 {
+        border-radius: 15px;
+        background-color: white; 
+        color: black; 
+        border: 2px solid #4CAF50;
+      }
+
+      .button1:hover {
+        background-color: #4CAF50;
+        color: white;
+        box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0        rgba(0,0,0,0.19);
+      }
+
+
+    </style>
+	</head>
+	
+	<body style="background-color:lightgreen">
+    <a href="http://www.rayfish.us"><img src="rayfish.us-logo.png"></a>
+    <h1><center>Droptrap v1.0</center></h1>
+    <p><center>Press up and down keys, right or left clicks, or tap.</center></p> 
+    <center><strong><p id = "levelScore">Level: </p></strong></center>
+    <center><canvas id = "game" width = "500" height = "225"></canvas></center>
+      
+
+    <script>
+      //the game
+      // window.addEventListener('load', function() {
+
+      var levelTitle = document.getElementById("levelScore");
+      //gameLive
+      var gameLive = true;
+      //level
+      var level = 1;
+      levelTitle.innerHTML = "Level: " + level;
+      //enemies
+      var enemies = [
+        //enemie 1
+        {
+          x: 10,
+          y: 50,
+          w: 20,
+          h: 20,
+          speed: 1
+        },
+        //enemie 2
+        {
+          x: 470,
+          y: 70,
+          w: 20,
+          h: 20,
+          speed: -1
+        },
+        //enemie 3
+        {
+          x: 10,
+          y: 90,
+          w: 20,
+          h: 20,
+          speed: 2
+        },
+        //enemie 4
+        {
+          x: 470,
+          y: 110,
+          w: 20,
+          h: 20,
+          speed: -2
+        }
+      ];
+      //player
+      var player = {
+        x: 250,
+        y: 10,
+        w: 20,
+        h: 20,
+        speedY: 3,
+        isMoving: false
+      }
+      //the goal
+      var goal = {
+        x: 250,
+        y: 195,
+        w: 20,
+        h: 30
+      }
+      //showing the outer box
+      var canvas = document.getElementById("game");
+      var ctx = canvas.getContext("2d");
+      //make the player move
+      var movePlayer = function(){
+        player.isMoving = true;
+      }
+      //make the player stop
+      var stopPlayer = function(){
+        player.isMoving = false;
+      }
+
+      //make the player move
+      var movePlayerWithKeyDown = function(event) {
+        if (event.keyCode == 40) {
+          player.speedY = Math.abs(player.speedY);
+          movePlayer();
+        } 
+        else if (event.keyCode == 38) {
+          player.speedY = -Math.abs(player.speedY);
+          movePlayer();
+        }
+
+      }
+      //make the player stop
+      var stopPlayerWithKeyUp = function() {
+        stopPlayer();
+      }
+      //make the player move
+      var movePlayerWithMouseDown = function(event) {
+        // first tell if it is the right mouse button
+        if (event.which == 1) {
+          player.speedY = Math.abs(player.speedY);
+        } 
+        else if (event.which == 3) {
+          player.speedY = -Math.abs(player.speedY);
+        }
+
+        // then we move the player
+        movePlayer();
+      }
+      //make the player stop
+      var stopPlayerWithMouseUp = function(event) {
+        stopPlayer();
+      }
+
+      // Event listener for key down and key up
+      document.addEventListener("keydown", movePlayerWithKeyDown);
+      document.addEventListener("keyup", stopPlayerWithKeyUp);
+
+      //event listeners to move player
+      document.oncontextmenu = function() {
+        return false;
+      }
+      // this is for desktop device
+      document.addEventListener("mousedown", movePlayerWithMouseDown);
+      document.addEventListener("mouseup", stopPlayerWithMouseUp);
+
+      // this is for touch screen device
+      document.addEventListener("touchstart", movePlayer);
+      document.addEventListener("touchend", stopPlayer);
+      //updating the logic
+      var update = function () {
+        // first check if the player is off the top
+        if (player.y < 10) {
+          player.y = 10;
+          return;
+        }
+
+        //check if you've reached the goal
+        if (checkCollision(player, goal)) {
+          if (level <= 10) {
+            //increase level
+            level ++;
+            //let the player know that the level is increased
+            levelTitle.innerHTML = "Level: " + level;
+            //resetting the player's position
+  	        player.x = 250;
+            player.y = 10;
+            //making the enemies faster
+            enemies.forEach(function(element, index){
+              if (element.speed > 0) {
+                element.speed ++;
+              }
+              else {
+                element.speed --;
+              }
+            });
+          }
+  	      else {
+  	  	    //stop the game
+  	  	    gameLive = false;
+  	  	    //tell player he/she won the game
+  	  	    alert('Congratulations! You\'ve beat the game!');
+  	  	    //reload
+  	  	    window.location = "";
+  	      }
+        }
+      
+        //updating the position of the player
+        if (player.isMoving) {
+          player.y += player.speedY;
+        }
+        //updating the position of the enemies
+        enemies.forEach(function(element, index){
+          //stopping the function if the game is not live
+          if (!gameLive) {
+            return;
+          }
+          //check if player collided with enemie
+          if (checkCollision(player, element)) {
+            //stop the game
+            gameLive = false;
+            //tell player he/she lost the game
+            alert('Game Over!');
+            //reload
+            window.location = "";
+          }
+
+          element.x += element.speed;
+          //bouncing motion
+          if(element.x <= 10) {
+            element.x = 10;
+            element.speed *= -1;
+          }
+          else if(element.x >= 470) {
+            element.x = 470;
+            element.speed *= -1;
+          }
+        });
+      }
+
+      //drawing the characters
+      var draw = function () {
+        //clearing the canvas
+        ctx.clearRect(0,0,500,500);
+        //draw the player
+        ctx.fillStyle = "#FF0000";
+        if (player.y < 10) {
+          player.y = 10;
+        }
+
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        //draw each enemy
+        ctx.fillStyle = "rgb(0,200,100)";
+        enemies.forEach(function(element, index){
+          ctx.fillRect(element.x, element.y, element.w, element.h);
+        });
+        //draw the goal
+        ctx.fillStyle = "rgb(100,100,0)";
+        ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
+      }
+
+      //the animation function
+      var step = function () {
+        update();
+        draw();
+        // if(gameLive) {
+        //  window.requestAnimationFrame(step);
+        // }
+      }
+
+      //check collision
+      var checkCollision = function(rect1, rect2) {
+        var closeOnWidth = Math.abs(rect1.x - rect2.x) <= Math.max(rect1.w, rect2.w);
+        var closeOnHeight = Math.abs(rect1.y - rect2.y) <= Math.max(rect1.h, rect2.h);
+        return closeOnHeight && closeOnWidth;
+      }
+      //initial kick
+      // step();
+
+      //timer
+      setInterval(step, 20);
+    </script>
+      
+    <br>
+    <br>
+    <a href="http://www.rayfish.us/">
+      <center><button class="button button1">Back To Homepage</button></center>
+    </a>
+    <address><center>Created by Ray Law, on February, 2017. Last revised on 11/27/18. Copyright &#169; 2018. All Rights Reserved.</center></address>
+
+	</body>
+
+</html>
